@@ -1,0 +1,1 @@
+CREATE DATABASE dead_internet;
