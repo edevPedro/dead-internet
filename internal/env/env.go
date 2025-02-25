@@ -6,21 +6,21 @@ import (
 )
 
 func GetString(key, fallback string) string {
-	value, ok := os.LookupEnv(key)
+	val, ok := os.LookupEnv(key)
 	if !ok {
 		return fallback
 	}
 
-	return value
+	return val
 }
 
 func GetInt(key string, fallback int) int {
-	value, ok := os.LookupEnv(key)
+	val, ok := os.LookupEnv(key)
 	if !ok {
 		return fallback
 	}
 
-	valAsInt, err := strconv.Atoi(value)
+	valAsInt, err := strconv.Atoi(val)
 	if err != nil {
 		return fallback
 	}
