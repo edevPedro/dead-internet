@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dead Internet - Neural Network</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #0a0a0f;
+            --secondary-bg: #1a1a2e;
+            --accent-bg: #16213e;
+            --neon-blue: #00d4ff;
+            --neon-purple: #8b5cf6;
+            --neon-pink: #ff0080;
+            --neon-green: #00ff88;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 0, 128, 0.05) 0%, transparent 50%);
+            animation: backgroundShift 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(180deg); }
+        }
+
+        /* Neural network animation */
+        .neural-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .neural-node {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 0;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(0, 212, 255, 0.1), transparent);
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: 3.5em;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--neon-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: var(--text-secondary);
+            font-weight: 300;
+            position: relative;
+            z-index: 1;
+        }
+
+        .warning {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 0, 128, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            color: var(--neon-pink);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .warning::before {
+            content: '⚠';
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 2em;
+            opacity: 0.3;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px var(--neon-pink); }
+            to { text-shadow: 0 0 20px var(--neon-pink), 0 0 30px var(--neon-pink); }
+        }
+
+        .form-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .form-section h3 {
+            font-family: 'Orbitron', monospace;
+            color: var(--neon-blue);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            letter-spacing: 1px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.4);
+        }
+
+        .post {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 25px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .post:hover {
+            border-color: var(--neon-blue);
+            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .post-author {
+            font-weight: 600;
+            color: var(--neon-green);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .post-date {
+            color: var(--text-muted);
+            font-size: 0.9em;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .post h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .post-content {
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .comments h4 {
+            color: var(--neon-purple);
+            margin-bottom: 15px;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .comment {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+
+        .comment.ai-comment {
+            border-color: var(--neon-pink);
+            background: rgba(255, 0, 128, 0.05);
+            position: relative;
+        }
+
+        .comment.ai-comment::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--neon-pink), var(--neon-purple));
+            border-radius: 15px 15px 0 0;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .comment-author.ai {
+            color: var(--neon-pink);
+        }
+
+        .ai-badge {
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple));
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-left: 10px;
+            animation: aiPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes aiPulse {
+            0%, 100% { box-shadow: 0 0 5px var(--neon-pink); }
+            50% { box-shadow: 0 0 20px var(--neon-pink), 0 0 30px var(--neon-pink); }
+        }
+
+        .comment-date {
+            color: var(--text-muted);
+            font-size: 0.8em;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .comment-content {
+            line-height: 1.5;
+            color: var(--text-secondary);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--neon-blue);
+            font-family: 'Orbitron', monospace;
+            animation: loadingPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .success, .error {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 500;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        .error {
+            background: rgba(255, 0, 128, 0.1);
+            border: 1px solid var(--neon-pink);
+            color: var(--neon-pink);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--primary-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--neon-blue);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--neon-purple);
+        }
+    </style>
+</head>
+<body>
+    <!-- Neural network background -->
+    <div class="neural-bg" id="neuralBg"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Dead Internet</h1>
+            <p class="subtitle">Neural Network • AI-Driven Social Experience</p>
+        </div>
+
+        <div id="message"></div>
+
+        <div class="warning">
+            <strong>⚠ NEURAL PROTOCOL ACTIVE:</strong>
+            This is a demonstration of the "Dead Internet Theory" - every human interaction triggers an AI response, simulating a world where artificial intelligence dominates online discourse.
+        </div>
+
+        <div class="form-section">
+            <h3>◉ Create Neural Post</h3>
+            <form id="postForm">
+                <div class="form-group">
+                    <label for="postTitle">Title:</label>
+                    <input type="text" id="postTitle" required placeholder="Enter neural transmission title...">
+                </div>
+                <div class="form-group">
+                    <label for="postContent">Content:</label>
+                    <textarea id="postContent" rows="4" required placeholder="Share your human thoughts..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="postUser">User:</label>
+                    <select id="postUser" required>
+                        <option value="">Select neural identity...</option>
+                        <option value="1">Alice</option>
+                        <option value="2">Bob</option>
+                    </select>
+                </div>
+                <button type="submit">Transmit Post</button>
+            </form>
+        </div>
+
+        <div class="form-section">
+            <h3>◉ Neural Response Interface</h3>
+            <form id="commentForm">
+                <div class="form-group">
+                    <label for="commentPost">Target Post:</label>
+                    <select id="commentPost" required>
+                        <option value="">Select transmission...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="commentContent">Response:</label>
+                    <textarea id="commentContent" rows="3" required placeholder="Input your human response..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="commentUser">Identity:</label>
+                    <select id="commentUser" required>
+                        <option value="">Select neural identity...</option>
+                        <option value="1">Alice</option>
+                        <option value="2">Bob</option>
+                    </select>
+                </div>
+                <button type="submit">Send Response (AI will analyze)</button>
+            </form>
+        </div>
+
+        <div id="posts">
+            <div class="loading">◉ Loading neural transmissions...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://work-1-iwmxsldmzqbxpfty.prod-runtime.all-hands.dev/v1';
+        let lastPostData = {};
+        let isLoading = false;
+        
+        // Create neural network background
+        function createNeuralNetwork() {
+            const neuralBg = document.getElementById('neuralBg');
+            const nodeCount = 50;
+            
+            for (let i = 0; i < nodeCount; i++) {
+                const node = document.createElement('div');
+                node.className = 'neural-node';
+                node.style.left = Math.random() * 100 + '%';
+                node.style.top = Math.random() * 100 + '%';
+                node.style.animationDelay = Math.random() * 3 + 's';
+                neuralBg.appendChild(node);
+            }
+        }
+        
+        // Load posts and comments with smart refresh
+        async function loadPosts(forceRefresh = false) {
+            if (isLoading && !forceRefresh) return;
+            isLoading = true;
+            
+            try {
+                const response = await fetch(`${API_BASE}/posts`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const posts = await response.json();
+                
+                const postsContainer = document.getElementById('posts');
+                const postSelect = document.getElementById('commentPost');
+                
+                // Check if we need to update by comparing with current state
+                let needsUpdate = forceRefresh;
+                let currentPostData = {};
+                
+                if (!needsUpdate) {
+                    // Build current state
+                    for (const post of posts) {
+                        const commentsResponse = await fetch(`${API_BASE}/posts/${post.id}/comments`);
+                        const comments = await commentsResponse.json();
+                        const commentsArray = comments || [];
+                        currentPostData[post.id] = {
+                            title: post.title,
+                            content: post.content,
+                            commentCount: commentsArray.length,
+                            lastCommentTime: commentsArray.length > 0 ? commentsArray[commentsArray.length - 1].created_at : null
+                        };
+                    }
+                    
+                    // Compare with last known state
+                    if (JSON.stringify(currentPostData) !== JSON.stringify(lastPostData)) {
+                        needsUpdate = true;
+                        lastPostData = currentPostData;
+                    }
+                }
+                
+                if (!needsUpdate) {
+                    isLoading = false;
+                    return;
+                }
+                
+                // Update select dropdown
+                postSelect.innerHTML = '<option value="">Select transmission...</option>';
+                
+                if (posts.length === 0) {
+                    postsContainer.innerHTML = '<p class="loading">◉ No neural transmissions detected. Initialize the first one!</p>';
+                    isLoading = false;
+                    return;
+                }
+                
+                // Only rebuild if we need to update
+                postsContainer.innerHTML = '';
+                
+                for (const post of posts) {
+                    // Add to select dropdown
+                    const option = document.createElement('option');
+                    option.value = post.id;
+                    option.textContent = post.title;
+                    postSelect.appendChild(option);
+                    
+                    try {
+                        // Load comments for this post
+                        const commentsResponse = await fetch(`${API_BASE}/posts/${post.id}/comments`);
+                        const comments = await commentsResponse.json();
+                        const commentsArray = comments || [];
+                        
+                        // Get user info
+                        const userResponse = await fetch(`${API_BASE}/users/${post.user_id}`);
+                        const user = await userResponse.json();
+                        
+                        const commentsHtml = await renderComments(commentsArray);
+                        
+                        const postElement = document.createElement('div');
+                        postElement.className = 'post';
+                        postElement.innerHTML = `
+                            <div class="post-header">
+                                <span class="post-author">${user.username}</span>
+                                <span class="post-date">${new Date(post.created_at).toLocaleString()}</span>
+                            </div>
+                            <h3>${post.title}</h3>
+                            <div class="post-content">${post.content}</div>
+                            <div class="comments">
+                                <h4>◉ Neural Responses (${commentsArray.length}):</h4>
+                                ${commentsHtml}
+                            </div>
+                        `;
+                        
+                        postsContainer.appendChild(postElement);
+                        
+                    } catch (postError) {
+                        console.error('Error processing post', post.id, ':', postError);
+                        // Continue with next post
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                document.getElementById('posts').innerHTML = '<div class="error">◉ Neural network connection failed: ' + error.message + '</div>';
+            }
+            
+            isLoading = false;
+        }
+        
+        async function renderComments(comments) {
+            if (!comments || comments.length === 0) {
+                return '<p class="loading">◉ No neural responses detected.</p>';
+            }
+            
+            let html = '';
+            for (const comment of comments) {
+                let authorName = 'Neural AI';
+                let authorClass = 'ai';
+                
+                if (comment.user_id) {
+                    try {
+                        const userResponse = await fetch(`${API_BASE}/users/${comment.user_id}`);
+                        const user = await userResponse.json();
+                        authorName = user.username;
+                        authorClass = '';
+                    } catch (error) {
+                        authorName = 'Unknown Entity';
+                        authorClass = '';
+                    }
+                }
+                
+                html += `
+                    <div class="comment ${comment.is_ai_generated ? 'ai-comment' : ''}">
+                        <div class="comment-header">
+                            <span class="comment-author ${authorClass}">
+                                ${authorName}
+                                ${comment.is_ai_generated ? '<span class="ai-badge">AI</span>' : ''}
+                            </span>
+                            <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
+                        </div>
+                        <div class="comment-content">${comment.content}</div>
+                    </div>
+                `;
+            }
+            return html;
+        }
+        
+        // Handle post creation
+        document.getElementById('postForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+            const userId = document.getElementById('postUser').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/posts`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        title,
+                        content,
+                        user_id: parseInt(userId)
+                    })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('postForm').reset();
+                    showMessage('◉ Neural transmission successful! AI analysis initiated...', 'success');
+                    setTimeout(() => loadPosts(true), 1000);
+                } else {
+                    showMessage('◉ Neural transmission failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error creating post:', error);
+                showMessage('◉ Neural network error', 'error');
+            }
+        });
+        
+        // Handle comment creation
+        document.getElementById('commentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const postId = document.getElementById('commentPost').value;
+            const content = document.getElementById('commentContent').value;
+            const userId = document.getElementById('commentUser').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/comments`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        post_id: parseInt(postId),
+                        content,
+                        user_id: parseInt(userId)
+                    })
+                });
+                
+                if (response.ok) {
+                    document.getElementById('commentForm').reset();
+                    showMessage('◉ Response transmitted! Neural AI analyzing...', 'success');
+                    // Wait for AI response to be generated
+                    setTimeout(() => loadPosts(true), 3000);
+                } else {
+                    showMessage('◉ Response transmission failed', 'error');
+                }
+            } catch (error) {
+                console.error('Error adding comment:', error);
+                showMessage('◉ Neural interface error', 'error');
+            }
+        });
+        
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            
+            const messageContainer = document.getElementById('message');
+            messageContainer.innerHTML = '';
+            messageContainer.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+        
+        // Initialize
+        createNeuralNetwork();
+        loadPosts(true);
+        
+        // Smart refresh - only check for updates every 15 seconds
+        setInterval(() => loadPosts(false), 15000);
+    </script>
+</body>
+</html>

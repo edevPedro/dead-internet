@@ -34,11 +34,34 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(app.corsMiddleware)
 
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
+		
+		// Posts routes
+		r.Route("/posts", func(r chi.Router) {
+			r.Post("/", app.createPostHandler)
+			r.Get("/", app.getAllPostsHandler)
+			r.Get("/{id}", app.getPostHandler)
+			r.Put("/{id}", app.updatePostHandler)
+			r.Delete("/{id}", app.deletePostHandler)
+			r.Get("/{id}/comments", app.getPostCommentsHandler)
+		})
+		
+		// Users routes
+		r.Route("/users", func(r chi.Router) {
+			r.Post("/", app.createUserHandler)
+			r.Get("/{id}", app.getUserHandler)
+			r.Get("/{id}/posts", app.getUserPostsHandler)
+		})
+		
+		// Comments routes
+		r.Route("/comments", func(r chi.Router) {
+			r.Post("/", app.createCommentHandler)
+		})
 	})
 	return r
 }
