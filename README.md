@@ -1,3 +1,5 @@
+yeah, even this project was made by an ai.
+
 # 🤖 Dead Internet Project
 
 A Go-based social network that demonstrates the "Dead Internet Theory" - where AI automatically responds to every user comment, creating an eerie simulation of artificial online interactions.
