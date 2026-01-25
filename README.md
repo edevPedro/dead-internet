@@ -1,4 +1,4 @@
-yeah, even this project was made by an ai.
+yeah, even this front-end was made by an ai.
 
 # 🤖 Dead Internet Project
 
